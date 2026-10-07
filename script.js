@@ -4,8 +4,13 @@ const categorySelect = document.querySelector("#note-category");
 const notesList = document.querySelector("#notes-list");
 const noteCount = document.querySelector("#note-count");
 const errorMessage = document.querySelector("#error-message");
+const searchInput = document.querySelector("#search-input");
 
-let notes = [];
+let notes = JSON.parse(localStorage.getItem("quicknotes")) || [];
+
+function saveNotes() {
+  localStorage.setItem("quicknotes", JSON.stringify(notes));
+}
 
 function updateCount() {
   if (notes.length === 0) {
@@ -20,33 +25,45 @@ function updateCount() {
 function render() {
   notesList.textContent = "";
 
-  notes.forEach((note) => {
-    const li = document.createElement("li");
-    li.className = `note-card category-${note.category.toLowerCase()}`;
+  const searchTerm = searchInput.value.trim().toLowerCase();
 
-    const text = document.createElement("p");
-    text.textContent = note.text;
+  const filteredNotes = notes.filter((note) =>
+    note.text.toLowerCase().includes(searchTerm)
+  );
 
-    const category = document.createElement("span");
-    category.className = "category-label";
-    category.textContent = note.category;
+  if (filteredNotes.length === 0 && searchTerm !== "") {
+    const message = document.createElement("li");
+    message.textContent = "No notes match your search.";
+    notesList.appendChild(message);
+  } else {
+    filteredNotes.forEach((note) => {
+      const li = document.createElement("li");
+      li.className = `note-card category-${note.category.toLowerCase()}`;
 
-    const date = document.createElement("p");
-    date.className = "date";
-    date.textContent = note.createdAt;
+      const text = document.createElement("p");
+      text.textContent = note.text;
 
-    const deleteButton = document.createElement("button");
-    deleteButton.type = "button";
-    deleteButton.textContent = "Delete";
-    deleteButton.dataset.id = note.id;
+      const category = document.createElement("span");
+      category.className = "category-label";
+      category.textContent = note.category;
 
-    li.appendChild(text);
-    li.appendChild(category);
-    li.appendChild(date);
-    li.appendChild(deleteButton);
+      const date = document.createElement("p");
+      date.className = "date";
+      date.textContent = note.createdAt;
 
-    notesList.appendChild(li);
-  });
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.textContent = "Delete";
+      deleteButton.dataset.id = note.id;
+
+      li.appendChild(text);
+      li.appendChild(category);
+      li.appendChild(date);
+      li.appendChild(deleteButton);
+
+      notesList.appendChild(li);
+    });
+  }
 
   updateCount();
 }
@@ -77,6 +94,7 @@ noteForm.addEventListener("submit", (event) => {
   };
 
   notes.push(newNote);
+  saveNotes();
   render();
 
   noteInput.value = "";
@@ -87,9 +105,11 @@ notesList.addEventListener("click", (event) => {
     const id = Number(event.target.dataset.id);
 
     notes = notes.filter((note) => note.id !== id);
-
+    saveNotes();
     render();
   }
 });
+
+searchInput.addEventListener("input", render);
 
 render();
