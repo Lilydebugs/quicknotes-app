@@ -2,8 +2,20 @@ const noteForm = document.querySelector("#note-form");
 const noteInput = document.querySelector("#note-input");
 const categorySelect = document.querySelector("#note-category");
 const notesList = document.querySelector("#notes-list");
+const noteCount = document.querySelector("#note-count");
+const errorMessage = document.querySelector("#error-message");
 
 let notes = [];
+
+function updateCount() {
+  if (notes.length === 0) {
+    noteCount.textContent = "You have no notes yet.";
+  } else if (notes.length === 1) {
+    noteCount.textContent = "You have 1 note.";
+  } else {
+    noteCount.textContent = `You have ${notes.length} notes.`;
+  }
+}
 
 function render() {
   notesList.textContent = "";
@@ -35,6 +47,8 @@ function render() {
 
     notesList.appendChild(li);
   });
+
+  updateCount();
 }
 
 noteForm.addEventListener("submit", (event) => {
@@ -42,6 +56,18 @@ noteForm.addEventListener("submit", (event) => {
 
   const text = noteInput.value.trim();
   const category = categorySelect.value;
+
+  if (text === "") {
+    errorMessage.textContent = "Please type a note first.";
+    return;
+  }
+
+  if (text.length > 200) {
+    errorMessage.textContent = "Notes must be 200 characters or fewer.";
+    return;
+  }
+
+  errorMessage.textContent = "";
 
   const newNote = {
     id: Date.now(),
@@ -55,3 +81,15 @@ noteForm.addEventListener("submit", (event) => {
 
   noteInput.value = "";
 });
+
+notesList.addEventListener("click", (event) => {
+  if (event.target.tagName === "BUTTON") {
+    const id = Number(event.target.dataset.id);
+
+    notes = notes.filter((note) => note.id !== id);
+
+    render();
+  }
+});
+
+render();
